@@ -17,30 +17,20 @@ for (let line of fromFile('./day05/input.txt')) {
 
     if (stacksDef) {
         // stacks
-        const _line = line.split('');
-
-        let row = 0;
-        while (_line.length) {
-            _line.shift(); // [
-            const crate = _line.shift();
-            _line.shift(); // ]
-            _line.shift(); //
-
-            if (crate !== ' ') {
+        for (let m of line.matchAll(/(\[(?<crate>[A-Z])\]|\s{3})\s?/g)) {
+            const crate = m.groups.crate;
+            if (crate) {
+                const row = m.index / 4;
                 stacks[row] = (stacks[row] || '') + crate;
             }
-
-            row++;
         }
 
         continue;
     }
 
     // commands
-    const _command = line.split(' from ');
-    const count = +_command[0].substr(5);
-    const [from, to] = _command[1].split(' to ').map(n => +n - 1);
-    commands.push([count, from, to]);
+    const [_, count, from, to] = line.match(/^move (\d+) from (\d+) to (\d+)$/);
+    commands.push([+count, +from - 1, +to - 1]);
 }
 
 // console.log('Stacks', stacks);
