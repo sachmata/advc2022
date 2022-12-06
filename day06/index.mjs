@@ -21,10 +21,9 @@ const examples14 = [
 const input = fs.readFileSync('./day06/input.txt', { encoding: 'utf8' });
 
 function indexOfUniquePatch(input, length) {
-    let start = 0;
-    for (let end = length; end <= input.length; start++, end++) {
-        const patch = input.substring(start, end);
-        // console.log(start, end, patch);
+    for (let end = length; end <= input.length; end++) {
+        const patch = input.substring(end - length, end);
+        // console.log(end, patch);
 
         if (new Set(patch.split('')).size === length) {
             return end;
