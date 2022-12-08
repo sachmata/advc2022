@@ -61,10 +61,10 @@ function checkTree(row, column) {
         }
     }
 
-    const visible = visibleUp || visibleDown || visibleLeft || visibleRight ? 1 : 0;
+    const visible = visibleUp || visibleDown || visibleLeft || visibleRight;
     const score = upScore * downScore * rightScore * leftScore;
 
-    console.log(`(${row}, ${column})`, visible ? '.' : 'X', score);
+    // console.log(`(${row}, ${column})`, visible ? '.' : 'X', score);
 
     return [visible, score];
 }
@@ -72,47 +72,24 @@ function checkTree(row, column) {
 let visibleSum = 0;
 let maxScore = 0;
 
-// TODO: this works ok for square forest with even side
-for (let ring = 0; ring < rows / 2; ring++) {
-    const ringColumns = columns - 2 * ring;
-    const ringRows = rows - 2 * ring;
-    const ringTrees = 2 * (ringRows + ringColumns - 2); // inner ring 1x1 gives 0
+for (let row = 0; row < rows; row++) {
+    for (let column = 0; column < columns; column++) {
+        const [visible, score] = checkTree(row, column);
 
-    // console.log(ring, ringColumns, ringRows, ringTrees);
+        if (visible) {
+            visibleSum++;
+        }
 
-    const a = _.range(ring, columns - ring - 1).map(column => [ring, column]);
-    const b = _.range(ring, rows - ring - 1).map(row => [row, columns - ring - 1]);
-    const c = _.range(ring + 1, columns - ring).map(column => [rows - ring - 1, column]);
-    const d = _.range(ring + 1, rows - ring).map(row => [row, ring]);
-
-    const aResult = a.map(c => checkTree(...c));
-    const bResult = b.map(c => checkTree(...c));
-    const cResult = c.map(c => checkTree(...c));
-    const dResult = d.map(c => checkTree(...c));
-
-    visibleSum += [
-        ...aResult.map(([visible]) => visible),
-        ...bResult.map(([visible]) => visible),
-        ...cResult.map(([visible]) => visible),
-        ...dResult.map(([visible]) => visible),
-    ].reduce((acc, r) => acc + r, 0);
-
-    const score = Math.max(
-        ...[
-            ...aResult.map(([_, score]) => score),
-            ...bResult.map(([_, score]) => score),
-            ...cResult.map(([_, score]) => score),
-            ...dResult.map(([_, score]) => score),
-        ]
-    );
-    if (score > maxScore) {
-        maxScore = score;
+        if (score > maxScore) {
+            maxScore = score;
+        }
     }
 }
 
-console.log(visibleSum);
-console.log(maxScore);
+console.log('Visible sum', visibleSum);
 
-// console.log('Part two');
+console.log('Part two');
+
+console.log('Max score', maxScore);
 
 console.log('End');
