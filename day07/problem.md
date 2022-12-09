@@ -85,7 +85,7 @@ To begin, find all of the directories with a total size of at most 100000, then 
 
 Find all of the directories with a total size of at most 100000. What is the sum of the total sizes of those directories?
 
-### Part Two
+#### Part Two
 
 Now, you're ready to choose a directory to delete.
 
