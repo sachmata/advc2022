@@ -4,30 +4,35 @@ import { fromFile } from '../lib/readlines.mjs';
 
 console.log('Day 10');
 
-const commands = [];
+const instr = [];
 
 for (let line of fromFile('./day10/input.txt')) {
+    if (!line.length) {
+        continue;
+    }
+
     const tokens = line.split(' ');
-    commands.push(tokens);
+    instr.push(tokens);
 }
 
 let cycle = 0;
-let regX = 1;
-let regE = 0;
+let regX = 1; // general X register
+let regPC = 0; // program counter register
+let regIS = 0; // instruction step register
 
-function execStep(command) {
-    if (command[0] === 'noop') {
-        return true;
-    } else if (command[0] === 'addx') {
-        if (command.length === 2) {
-            command[2] = '+';
-            return false;
-        } else {
-            regX += +command[1];
-            return true;
+function execStep([instr, arg0, arg1]) {
+    regIS++;
+
+    if (instr === 'noop') {
+        (regIS = 0), regPC++;
+    } else if (instr === 'addx') {
+        // 2 cycles
+        if (regIS > 1) {
+            regX += +arg0;
+            (regIS = 0), regPC++;
         }
     } else {
-        throw new Error(`Unknown instruction ${command}`);
+        throw new Error(`Unknown instruction ${instr}`);
     }
 }
 
@@ -45,27 +50,22 @@ function draw() {
     }
 }
 
-const testCycles = new Set([20, 60, 100, 140, 180, 220]);
-
 let sum = 0;
 
 while (true) {
     cycle++;
 
-    if (testCycles.has(cycle)) {
+    if (!((cycle - 20) % 40)) {
         // console.log('Test cycle', cycle, regX);
         sum += regX * cycle;
     }
 
-    if (regE >= commands.length) {
+    if (regPC >= instr.length) {
         break;
     }
 
     draw();
-
-    if (execStep(commands[regE])) {
-        regE++;
-    }
+    execStep(instr[regPC]);
 
     // console.log(cycle, regE, regX);
 }
