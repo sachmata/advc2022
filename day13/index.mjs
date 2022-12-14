@@ -1,6 +1,6 @@
 import { fromFile } from '../lib/readlines.mjs';
 
-console.log('Day 12');
+console.log('Day 13');
 
 const pairs = [];
 let pair = [];
@@ -48,6 +48,8 @@ function compare(left, right) {
 
         return left.length < right.length ? true : null;
     }
+
+    return null;
 }
 
 let sum = 0;
