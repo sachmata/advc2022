@@ -77,7 +77,7 @@ if (!start || !target) {
 }
 
 const distance = BFS(start, target);
-console.log({ ...start, distance });
+console.log({ ...start, distance }); // 462
 
 console.log('Part two');
 
@@ -95,6 +95,6 @@ for (let y = 0; y < terrain.length; y++) {
 }
 
 const result = results.sort((a, b) => a.distance - b.distance)[0];
-console.log(result);
+console.log(result); // 451
 
 console.log('End');

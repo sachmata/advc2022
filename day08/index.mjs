@@ -86,10 +86,10 @@ for (let row = 0; row < rows; row++) {
     }
 }
 
-console.log('Visible sum', visibleSum);
+console.log('Visible sum', visibleSum); // 1693
 
 console.log('Part two');
 
-console.log('Max score', maxScore);
+console.log('Max score', maxScore); // 422059
 
 console.log('End');

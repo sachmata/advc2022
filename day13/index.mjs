@@ -61,7 +61,7 @@ for (let i = 0; i < pairs.length; i++) {
     }
 }
 
-console.log('Sum', sum);
+console.log('Sum', sum); // 6101
 
 console.log('Part two');
 
@@ -86,6 +86,6 @@ packets.sort((a, b) => {
 const key1 = packets.indexOf(div1) + 1;
 const key2 = packets.indexOf(div2) + 1;
 
-console.log('Key', key1 * key2);
+console.log('Key', key1 * key2); // 21909
 
 console.log('End');

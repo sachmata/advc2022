@@ -99,7 +99,7 @@ for (let round = 1; round <= 20; round++) {
 }
 
 const [a1, b1] = _data1.monkeys.sort((a, b) => b.inspected - a.inspected);
-console.log('Monkey business', a1.inspected * b1.inspected);
+console.log('Monkey business', a1.inspected * b1.inspected); // 69918
 
 console.log('Part two');
 
@@ -128,6 +128,6 @@ for (let round = 1; round <= 10000; round++) {
 }
 
 const [a2, b2] = _data2.monkeys.sort((a, b) => b.inspected - a.inspected);
-console.log('Monkey business', a2.inspected * b2.inspected);
+console.log('Monkey business', a2.inspected * b2.inspected); // 19573408701
 
 console.log('End');

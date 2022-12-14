@@ -54,7 +54,7 @@ for (const stack of stacks1) {
     result1 += stack[0];
 }
 
-console.log('Result', result1);
+console.log('Result', result1); // FWNSHLDNZ
 
 console.log('Part two');
 
@@ -73,6 +73,6 @@ for (const stack of stacks2) {
     result2 += stack[0];
 }
 
-console.log('Result', result2);
+console.log('Result', result2); // RNRGDNFQG
 
 console.log('End');

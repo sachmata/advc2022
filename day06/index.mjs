@@ -37,12 +37,12 @@ examples4.forEach(e => {
     console.log('Example (4)', indexOfUniquePatch(e, 4));
 });
 
-console.log('Input (4)', indexOfUniquePatch(input, 4));
+console.log('Input (4)', indexOfUniquePatch(input, 4)); // 1531
 
 examples14.forEach(e => {
     console.log('Example (14)', indexOfUniquePatch(e, 14));
 });
 
-console.log('Input (14)', indexOfUniquePatch(input, 14));
+console.log('Input (14)', indexOfUniquePatch(input, 14)); // 2518
 
 console.log('End');

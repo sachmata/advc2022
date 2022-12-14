@@ -45,12 +45,12 @@ for (let line of fromFile('./day03/input.txt')) {
 
 const sumPartOne = result1.reduce((acc, [_, p]) => acc + p, 0);
 
-console.log('Sum part one', sumPartOne);
+console.log('Sum part one', sumPartOne); // 547
 
 console.log('Part two');
 
 const sumPartTwo = result2.reduce((acc, [_, p]) => acc + p, 0);
 
-console.log('Sum part two', sumPartTwo);
+console.log('Sum part two', sumPartTwo); // 843
 
 console.log('End');

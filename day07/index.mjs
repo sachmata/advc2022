@@ -54,7 +54,7 @@ for (let dir in sum) {
     }
 }
 
-console.log(resultA);
+console.log(resultA); // 1989474
 
 console.log('Part two');
 
@@ -69,6 +69,6 @@ const dirToDelete = Object.entries(sum)
     .filter(([_, size]) => size > toDelete)
     .sort((a, b) => a[1] - b[1]);
 
-console.log(dirToDelete[0][1]);
+console.log(dirToDelete[0][1]); // 1111607
 
 console.log('End');

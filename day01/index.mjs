@@ -21,7 +21,7 @@ for (let i = 0; i < elves.length; i++) {
     }
 }
 
-console.log('Max', maxIndex, elves[maxIndex]);
+console.log('Max', maxIndex, elves[maxIndex]); // 69883
 
 console.log('Part two');
 
@@ -37,6 +37,6 @@ const sumTop3 = top3Elves.reduce((acc, elf) => {
     return acc + elf[1];
 }, 0);
 
-console.log('Top 3 sum', sumTop3);
+console.log('Top 3 sum', sumTop3); // 207576
 
 console.log('End');

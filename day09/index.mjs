@@ -102,7 +102,7 @@ for (let command of commands) {
 // drawRope(knots1);
 // drawVisited(visited1);
 
-console.log('Visited', visited1.size);
+console.log('Visited', visited1.size); // 6090
 
 console.log('Part two');
 
@@ -133,6 +133,6 @@ for (let command of commands) {
 // drawRope(knots2);
 // drawVisited(visited2);
 
-console.log('Visited', visited2.size);
+console.log('Visited', visited2.size); // 2566
 
 console.log('End');

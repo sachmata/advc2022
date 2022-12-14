@@ -154,10 +154,10 @@ for (let line of fromFile('./day02/input.txt')) {
 
 const sumA = roundsA.reduce((acc, r) => acc + r, 0);
 
-console.log('Sum A', sumA);
+console.log('Sum A', sumA); // 15572
 console.log('Part two');
 
 const sumB = roundsB.reduce((acc, r) => acc + r, 0);
-console.log('Sum B', sumB);
+console.log('Sum B', sumB); // 16098
 
 console.log('End');

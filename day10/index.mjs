@@ -69,7 +69,8 @@ while (true) {
 
     // console.log(cycle, regE, regX);
 }
+// RLEZFLGE
 
-console.log('Sum', sum);
+console.log('Sum', sum); // 17020
 
 console.log('End');
