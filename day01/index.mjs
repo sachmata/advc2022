@@ -1,4 +1,4 @@
-import { fromFile } from '../lib/readlines.mjs';
+import { fromFile } from '../lib/read-lines.mjs';
 
 console.log('Day 1');
 
