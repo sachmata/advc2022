@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 import { fromFile } from '../lib/read-lines.mjs';
 
 console.log('Day 15');
@@ -32,7 +30,7 @@ function sensorCoverage({ sensor, beacon }, row) {
     const distance = Math.abs(sensor.x - beacon.x) + Math.abs(sensor.y - beacon.y);
     const delta = Math.abs(sensor.y - row);
     if (delta > distance) {
-        return [];
+        return null;
     }
 
     const start = sensor.x - distance + delta;
@@ -45,7 +43,12 @@ const ROW = 2000000;
 
 let rowCoverage = new Set();
 for (const pair of data) {
-    const { start, end } = sensorCoverage(pair, ROW);
+    const coverage = sensorCoverage(pair, ROW);
+    if (!coverage) {
+        continue;
+    }
+
+    const { start, end } = coverage;
     for (let i = start; i <= end; i++) {
         rowCoverage.add(i);
     }
@@ -58,6 +61,65 @@ for (const pair of data) {
     }
 }
 
-console.log(rowCoverage.size);
+console.log('Positions', rowCoverage.size); // 4665948
+
+console.log('Part two');
+
+function mergeIntervals(intervals) {
+    if (intervals.length < 2) {
+        return intervals;
+    }
+
+    intervals.sort((a, b) => a[0] - b[0]);
+
+    const result = [];
+
+    let previous = intervals[0];
+    for (let i = 1; i < intervals.length; i++) {
+        if (previous[1] >= intervals[i][0]) {
+            previous = [previous[0], Math.max(previous[1], intervals[i][1])];
+        } else {
+            result.push(previous);
+            previous = intervals[i];
+        }
+    }
+
+    result.push(previous);
+
+    return result;
+}
+
+const MAX = 4e6;
+
+for (let y = 0; y <= MAX; y++) {
+    const intervals = [];
+
+    for (const pair of data) {
+        const coverage = sensorCoverage(pair, y);
+        if (!coverage) {
+            continue;
+        }
+
+        if (coverage.end < 0 || coverage.start > MAX) {
+            continue;
+        }
+
+        const start = Math.max(coverage.start, 0);
+        const end = Math.min(coverage.end, MAX);
+
+        intervals.push([start, end + 1]);
+    }
+
+    const _intervals = mergeIntervals(intervals);
+
+    if (_intervals.length > 1) {
+        const x = _intervals[0][1];
+        const freq = x * 4e6 + y;
+
+        console.log('Frequency', freq); // 13543690671045
+
+        break;
+    }
+}
 
 console.log('End');
