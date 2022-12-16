@@ -4,7 +4,7 @@ console.log('Day 16');
 
 // https://adventofcode.com/2022/day/XX/input
 
-const valves = {};
+const rates = {};
 const edges = {};
 
 for (let line of fromFile('./day16/example.txt')) {
@@ -21,69 +21,75 @@ for (let line of fromFile('./day16/example.txt')) {
         .replace(' tunnels lead to valves ', '')
         .split(', ');
 
-    valves[_name] = { name: _name, rate: _rate, openAt: null };
+    rates[_name] = _rate;
     edges[_name] = _edges;
 }
 
-function cloneValves(valves) {
-    return JSON.parse(JSON.stringify(valves));
-}
+function BFS(start, end) {
+    const visited = {};
+    const distance = {};
 
-const AVAILABLE_TIME = 20;
+    visited[start] = true;
+    distance[start] = 0;
 
-function visitValve(valveName, valves, releaseFlow, elapsedTime) {
-    if (elapsedTime >= AVAILABLE_TIME) {
-        return releaseFlow;
-    }
+    const queue = [start];
 
-    console.log(valveName, elapsedTime);
+    while (!distance[end] && queue.length) {
+        const current = queue.shift();
 
-    const currentValve = valves[valveName];
+        for (let node of edges[current]) {
+            if (visited[node]) {
+                continue;
+            }
 
-    // case 1: openValve & move
-    let openAndMoveResult = 0;
-    if (currentValve.rate > 0 && !currentValve.openAt) {
-        const _valves = cloneValves(valves);
-        const _valve = _valves[valveName];
-        const _elapsedTime = elapsedTime + 1;
-        const _releaseFlow = releaseFlow + (AVAILABLE_TIME - _elapsedTime) * _valve.rate;
+            visited[node] = true;
+            distance[node] = distance[current] + 1;
 
-        _valve.openAt = _elapsedTime;
-
-        const results = edges[valveName]
-            .map(n => valves[n])
-            .map(valve =>
-                visitValve(valve.name, cloneValves(_valves), _releaseFlow, _elapsedTime + 1)
-            )
-            .sort((a, b) => b - a);
-        if (results.length) {
-            openAndMoveResult = results[0];
+            queue.push(node);
         }
     }
 
-    // case 2: move
-    let onlyMoveResult = 0;
-    {
-        const _valves = valves;
-        const _elapsedTime = elapsedTime;
-        const _releaseFlow = releaseFlow;
-
-        const results = edges[valveName]
-            .map(n => valves[n])
-            .map(valve =>
-                visitValve(valve.name, cloneValves(_valves), _releaseFlow, _elapsedTime + 1)
-            )
-            .sort((a, b) => b - a);
-        if (results.length) {
-            onlyMoveResult = results[0];
-        }
-    }
-
-    return Math.max(openAndMoveResult, onlyMoveResult);
+    return distance[end];
 }
 
-const result = visitValve('AA', valves, 0, 0);
+const opened = {};
 
-console.log(result);
+let flow = 0;
+let availableTime = 30;
+let current = 'AA';
+
+while (availableTime) {
+    const distance = Object.keys(rates)
+        .filter(v => v !== current && !opened[v] && !!rates[v])
+        .reduce((acc, v) => ((acc[v] = BFS(current, v)), acc), {});
+
+    console.log(
+        Object.keys(distance).map(
+            v =>
+                `${v}: ${distance[v]} ${rates[v]} ${(availableTime - (distance[v] + 1)) * rates[v]}`
+        )
+    );
+
+    const next = Object.keys(distance).sort((a, b) => {
+        const _a = (availableTime - (distance[a] + 1)) * rates[a];
+        const _b = (availableTime - (distance[b] + 1)) * rates[b];
+
+        return _b - _a;
+    })[0];
+
+    if (!next) {
+        break;
+    }
+
+    console.log(current, '->', next, distance[next]);
+
+    availableTime -= distance[next] + 1;
+    opened[next] = true;
+    flow += availableTime * rates[next];
+
+    current = next;
+}
+
+console.log(flow, availableTime);
 
 console.log('End');
