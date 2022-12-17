@@ -4,10 +4,10 @@ console.log('Day 16');
 
 // https://adventofcode.com/2022/day/XX/input
 
-const rates = {};
-const edges = {};
+const valveRates = {};
+const valveTunnel = {};
 
-for (let line of fromFile('./day16/example.txt')) {
+for (let line of fromFile('./day16/input.txt')) {
     if (!line.length) {
         continue;
     }
@@ -21,75 +21,84 @@ for (let line of fromFile('./day16/example.txt')) {
         .replace(' tunnels lead to valves ', '')
         .split(', ');
 
-    rates[_name] = _rate;
-    edges[_name] = _edges;
+    valveRates[_name] = _rate;
+    valveTunnel[_name] = _edges;
 }
 
-function BFS(start, end) {
-    const visited = {};
-    const distance = {};
+const EMPTY_SCORE = { open: false, move: false, score: 0 };
 
-    visited[start] = true;
-    distance[start] = 0;
-
-    const queue = [start];
-
-    while (!distance[end] && queue.length) {
-        const current = queue.shift();
-
-        for (let node of edges[current]) {
-            if (visited[node]) {
-                continue;
-            }
-
-            visited[node] = true;
-            distance[node] = distance[current] + 1;
-
-            queue.push(node);
-        }
+const scoresCache = {};
+function getScore(valve, availableTime, open) {
+    const key = `${valve}|${String(availableTime).padStart(2, '0')}|${open.join('|')}`;
+    let result = scoresCache[key];
+    if (result) {
+        return result;
     }
 
-    return distance[end];
+    if (availableTime <= 0) {
+        return EMPTY_SCORE;
+    }
+
+    const openScore =
+        open.indexOf(valve) !== -1 || !valveRates[valve]
+            ? 0
+            : (availableTime - 1) * valveRates[valve];
+
+    const moveScores = {};
+    for (let tunnel of valveTunnel[valve]) {
+        moveScores[tunnel] = getScore(tunnel, availableTime - 1, open);
+    }
+
+    const maxMoveScoreEdge = Object.keys(moveScores).sort(
+        (a, b) => moveScores[b].score - moveScores[a].score
+    )[0];
+    const maxMoveScore = moveScores[maxMoveScoreEdge];
+
+    const score =
+        openScore > maxMoveScore.score
+            ? { open: true, move: null, score: openScore }
+            : maxMoveScore.score
+            ? { open: false, move: maxMoveScoreEdge, score: maxMoveScore.score }
+            : EMPTY_SCORE;
+
+    scoresCache[key] = score;
+
+    return score;
 }
 
-const opened = {};
-
-let flow = 0;
-let availableTime = 30;
+const TOTAL_AVAILABLE_TIME = 30;
+let availableTime = TOTAL_AVAILABLE_TIME;
 let current = 'AA';
+let score = 0;
+let open = [];
 
 while (availableTime) {
-    const distance = Object.keys(rates)
-        .filter(v => v !== current && !opened[v] && !!rates[v])
-        .reduce((acc, v) => ((acc[v] = BFS(current, v)), acc), {});
+    const _score = getScore(current, availableTime, open);
 
-    console.log(
-        Object.keys(distance).map(
-            v =>
-                `${v}: ${distance[v]} ${rates[v]} ${(availableTime - (distance[v] + 1)) * rates[v]}`
-        )
-    );
+    availableTime--;
 
-    const next = Object.keys(distance).sort((a, b) => {
-        const _a = (availableTime - (distance[a] + 1)) * rates[a];
-        const _b = (availableTime - (distance[b] + 1)) * rates[b];
+    console.log(`== Minute ${TOTAL_AVAILABLE_TIME - availableTime} ==`);
 
-        return _b - _a;
-    })[0];
+    const releasing = open.reduce((acc, o) => ((acc += valveRates[o]), acc), 0);
+    score += releasing;
 
-    if (!next) {
-        break;
+    console.log(`Opened valves (${open.join(', ')}) releasing ${releasing}`);
+
+    if (_score.open) {
+        open = [...open, current].sort();
+
+        console.log('Open', current);
+        continue;
     }
 
-    console.log(current, '->', next, distance[next]);
+    if (_score.move) {
+        current = _score.move;
 
-    availableTime -= distance[next] + 1;
-    opened[next] = true;
-    flow += availableTime * rates[next];
-
-    current = next;
+        console.log('Move to', current);
+        continue;
+    }
 }
 
-console.log(flow, availableTime);
+console.log(score);
 
 console.log('End');
