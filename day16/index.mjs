@@ -7,7 +7,7 @@ console.log('Day 16');
 const valveRates = {};
 const valveTunnel = {};
 
-for (let line of fromFile('./day16/input.txt')) {
+for (let line of fromFile('./day16/example.txt')) {
     if (!line.length) {
         continue;
     }
@@ -28,8 +28,8 @@ for (let line of fromFile('./day16/input.txt')) {
 const EMPTY_SCORE = { open: false, move: false, score: 0 };
 
 const scoresCache = {};
-function getScore(valve, availableTime, open) {
-    const key = `${valve}|${String(availableTime).padStart(2, '0')}|${open.join('|')}`;
+function getScore(valve, availableTime, open, ignore) {
+    const key = [valve, String(availableTime).padStart(2, '0'), ...open, ...ignore].join('|');
     let result = scoresCache[key];
     if (result) {
         return result;
@@ -42,11 +42,14 @@ function getScore(valve, availableTime, open) {
     const openScore =
         open.indexOf(valve) !== -1 || !valveRates[valve]
             ? 0
-            : (availableTime - 1) * valveRates[valve];
+            : (availableTime - 1) * valveRates[valve] +
+              getScore(valve, availableTime - 1, [...open, valve].sort(), []).score;
 
     const moveScores = {};
     for (let tunnel of valveTunnel[valve]) {
-        moveScores[tunnel] = getScore(tunnel, availableTime - 1, open);
+        if (ignore.indexOf(tunnel) === -1) {
+            moveScores[tunnel] = getScore(tunnel, availableTime - 1, open, []);
+        }
     }
 
     const maxMoveScoreEdge = Object.keys(moveScores).sort(
@@ -66,14 +69,18 @@ function getScore(valve, availableTime, open) {
     return score;
 }
 
-const TOTAL_AVAILABLE_TIME = 30;
+const TOTAL_AVAILABLE_TIME = 26; // 30
 let availableTime = TOTAL_AVAILABLE_TIME;
-let current = 'AA';
+
+let currentMe = 'AA';
+let currentElephant = 'AA';
+
 let score = 0;
 let open = [];
 
 while (availableTime) {
-    const _score = getScore(current, availableTime, open);
+    // const _scoreElephant = getScore(currentElephant, availableTime, open,[]);
+    const scoreMe = getScore(currentMe, availableTime, open, []);
 
     availableTime--;
 
@@ -84,21 +91,31 @@ while (availableTime) {
 
     console.log(`Opened valves (${open.join(', ')}) releasing ${releasing}`);
 
-    if (_score.open) {
-        open = [...open, current].sort();
+    if (scoreMe.open) {
+        open = [...open, currentMe].sort();
 
-        console.log('Open', current);
-        continue;
+        console.log('I open', currentMe);
     }
 
-    if (_score.move) {
-        current = _score.move;
+    if (scoreMe.move) {
+        currentMe = scoreMe.move;
 
-        console.log('Move to', current);
-        continue;
+        console.log('I move to', currentMe);
     }
+
+    // if (_scoreElephant.open) {
+    //     open = [...open, currentElephant].sort();
+
+    //     console.log('Elephant open', currentElephant);
+    // }
+
+    // if (_scoreElephant.move) {
+    //     currentElephant = _scoreElephant.move;
+
+    //     console.log('Elephant move to', currentElephant);
+    // }
 }
 
-console.log(score);
+console.log(score); // 1580
 
 console.log('End');
