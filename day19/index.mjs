@@ -1,3 +1,4 @@
+import cyrb53 from '../lib/cyrb53.mjs';
 import Cache from '../lib/cache.mjs';
 import { fromFile } from '../lib/read-lines.mjs';
 
@@ -7,7 +8,7 @@ console.log('Day 19');
 
 const blueprints = [];
 
-for (let line of fromFile('./day19/input.txt')) {
+for (let line of fromFile('./day19/input2.txt')) {
     if (!line.length) {
         continue;
     }
@@ -63,12 +64,14 @@ const newResources = (robots, resources, time, recipe) => {
 const cache = new Cache();
 
 const dfs = (blueprintIndex, robots, resources, time) => {
-    const key = [
-        blueprintIndex, //
-        ...Object.values(robots),
-        ...Object.values(resources),
-        time,
-    ].join('|');
+    const key = cyrb53(
+        [
+            blueprintIndex, //
+            ...Object.values(robots),
+            ...Object.values(resources),
+            time,
+        ].join('|')
+    );
     const cached = cache.get(key);
     if (cached) return cached;
 
@@ -107,7 +110,7 @@ const dfs = (blueprintIndex, robots, resources, time) => {
 
 const START_ROBOTS = { ore: 1, clay: 0, obsidian: 0, geode: 0 };
 const START_RESOURCES = { ore: 0, clay: 0, obsidian: 0, geode: 0 };
-const START_TIME = 24;
+const START_TIME = 32;
 
 const results = [];
 
@@ -121,11 +124,15 @@ for (let blueprintIndex = 0; blueprintIndex < blueprints.length; blueprintIndex+
     results.push(geodes);
 }
 
+// console.log(
+//     'Part one',
+//     'Quality:',
+//     results.reduce((acc, g, i) => ((acc += (i + 1) * g), acc), 0)
+// ); // 1349
+
 console.log(
-    'Part one',
-    'Quality:',
-    results.reduce((acc, g, i) => ((acc += (i + 1) * g), acc), 0)
-); // 1349
-// console.log(results.reduce((acc, g) => ((acc *= g), acc), 1));
+    'Part two',
+    results.reduce((acc, g) => ((acc *= g), acc), 1)
+); // 21840
 
 console.log('End');
