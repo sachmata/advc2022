@@ -1,4 +1,4 @@
-import cyrb53 from '../lib/cyrb53.mjs';
+import Cache from '../lib/cache.mjs';
 import { fromFile } from '../lib/read-lines.mjs';
 
 console.log('Day 19');
@@ -20,182 +20,90 @@ for (let line of fromFile('./day19/input.txt')) {
     const cObsidianMatch = lObsidian.match(/^.+ (?<ore>\d+) ore and (?<clay>\d+) clay$/);
     const cGeodeMatch = lGeode.match(/^.+ (?<ore>\d+) ore and (?<obsidian>\d+) obsidian$/);
 
-    const price = {
+    const recipes = {
         ore: { ore: +cOreMatch.groups.ore },
         clay: { ore: +cClayMatch.groups.ore },
         obsidian: { ore: +cObsidianMatch.groups.ore, clay: +cObsidianMatch.groups.clay },
         geode: { ore: +cGeodeMatch.groups.ore, obsidian: +cGeodeMatch.groups.obsidian },
     };
 
-    const maxSpend = {
-        ore: Math.max(price.ore.ore, price.clay.ore, price.obsidian.ore, price.geode.ore),
-        clay: Math.max(price.obsidian.clay),
-        obsidian: Math.max(price.geode.obsidian),
-        geode: Number.MAX_SAFE_INTEGER,
-    };
+    const maxSpend = Object.keys(recipes)
+        .filter(k => k !== 'geode')
+        .reduce(
+            (acc, key1) => (
+                (acc[key1] = Math.max(
+                    ...Object.keys(recipes).map(key2 => recipes[key2][key1] || 0)
+                )),
+                acc
+            ),
+            { geode: Number.MAX_SAFE_INTEGER }
+        );
 
-    blueprints.push({ price, maxSpend });
+    blueprints.push({ recipes, maxSpend });
 }
 
 // console.log(blueprints);
 
-// rotating cache as single map has about 16M limit size
-let caches = [new Map()];
-
-const cacheSet = (key, value) => {
-    let cache = caches[caches.length - 1];
-    if (cache.size > 10e6) {
-        cache = new Map();
-        caches.push(cache);
-    }
-    cache.set(key, value);
-};
-const cacheGet = key => {
-    for (let cache of caches) if (cache.has(key)) return cache.get(key);
-    return undefined;
-};
-const cacheHas = key => {
-    for (let cache of caches) if (cache.has(key)) return true;
-    return false;
-};
-const cacheReset = () => {
-    caches = [new Map()];
-};
-
-let maxMax = 0;
-
-function dfs(blueprintIndex, robots, resources, time) {
-    // use number for key, strings overflow the heap
-    // cyrb53 is better than murmurhash which have collisions
-    const key = cyrb53(
-        [
-            blueprintIndex, //
-            ...Object.values(robots),
-            ...Object.values(resources),
-            time,
-        ].join('|')
+const timeNeeded = (robots, resources, recipe) =>
+    Math.max(
+        ...Object.keys(recipe).map(key =>
+            !robots[key] ? Infinity : Math.ceil((recipe[key] - resources[key]) / robots[key])
+        ),
+        0
     );
-    const cached = cacheGet(key);
+
+const newResources = (robots, resources, time, recipe) => {
+    const _new = {};
+    for (const key in resources) {
+        _new[key] = resources[key] + time * robots[key] - (recipe[key] || 0);
+    }
+    return _new;
+};
+
+const cache = new Cache();
+
+const dfs = (blueprintIndex, robots, resources, time) => {
+    const key = [
+        blueprintIndex, //
+        ...Object.values(robots),
+        ...Object.values(resources),
+        time,
+    ].join('|');
+    const cached = cache.get(key);
     if (cached) return cached;
 
-    const { price, maxSpend } = blueprints[blueprintIndex];
-
-    // console.log(blueprint, robots, resources, time);
-
     if (time <= 0) {
-        const result = resources.geode;
-        if (maxMax < result) {
-            maxMax = result;
-            console.log('maxMax', result);
-            console.log(caches.map(c => c.size));
-        }
-        return result;
+        return resources.geode;
     }
 
-    let max = 0;
+    let max = resources.geode + robots.geode * time;
 
-    const newTime = time - 1;
+    const { recipes, maxSpend } = blueprints[blueprintIndex];
 
-    // collected resources by each robot
-    const newResources = {
-        ore: resources.ore + robots.ore,
-        clay: resources.clay + robots.clay,
-        obsidian: resources.obsidian + robots.obsidian,
-        geode: resources.geode + robots.geode,
-    };
+    // build robots
+    for (const key in recipes) {
+        if (robots[key] >= maxSpend[key]) continue;
 
-    // build geode robot
-    if (
-        robots.geode < maxSpend.geode &&
-        resources.ore >= price.geode.ore &&
-        resources.obsidian >= price.geode.obsidian
-    ) {
-        max = Math.max(
-            max,
-            dfs(
-                blueprintIndex,
-                {
-                    ...robots,
-                    geode: robots.geode + 1,
-                },
-                {
-                    ...newResources,
-                    ore: newResources.ore - price.geode.ore,
-                    obsidian: newResources.obsidian - price.geode.obsidian,
-                },
-                newTime
-            )
+        const recipe = recipes[key];
+
+        const time_ = timeNeeded(robots, resources, recipe) + 1;
+        if (time_ > time) continue;
+
+        const resources_ = newResources(robots, resources, time_, recipe);
+
+        const result_ = dfs(
+            blueprintIndex,
+            { ...robots, [key]: robots[key] + 1 },
+            resources_,
+            time - time_
         );
+
+        max = Math.max(max, result_);
     }
 
-    // build obsidian robot
-    if (
-        robots.obsidian < maxSpend.obsidian &&
-        resources.ore >= price.obsidian.ore &&
-        resources.clay >= price.obsidian.clay
-    ) {
-        max = Math.max(
-            max,
-            dfs(
-                blueprintIndex,
-                {
-                    ...robots,
-                    obsidian: robots.obsidian + 1,
-                },
-                {
-                    ...newResources,
-                    ore: newResources.ore - price.obsidian.ore,
-                    clay: newResources.clay - price.obsidian.clay,
-                },
-                newTime
-            )
-        );
-    }
-
-    // build clay robot
-    if (robots.clay < maxSpend.clay && resources.ore >= price.clay.ore) {
-        max = Math.max(
-            max,
-            dfs(
-                blueprintIndex,
-                {
-                    ...robots,
-                    clay: robots.clay + 1,
-                },
-                {
-                    ...newResources,
-                    ore: newResources.ore - price.clay.ore,
-                },
-                newTime
-            )
-        );
-    }
-
-    // build ore robot
-    if (robots.ore < maxSpend.ore && resources.ore >= price.ore.ore) {
-        max = Math.max(
-            max,
-            dfs(
-                blueprintIndex,
-                {
-                    ...robots,
-                    ore: robots.ore + 1,
-                },
-                {
-                    ...newResources,
-                    ore: newResources.ore - price.ore.ore,
-                },
-                newTime
-            )
-        );
-    }
-
-    // wait (collect resources)
-    max = Math.max(max, dfs(blueprintIndex, robots, newResources, newTime));
-
-    cacheSet(key, max);
+    cache.set(key, max);
     return max;
-}
+};
 
 const START_ROBOTS = { ore: 1, clay: 0, obsidian: 0, geode: 0 };
 const START_RESOURCES = { ore: 0, clay: 0, obsidian: 0, geode: 0 };
@@ -204,18 +112,20 @@ const START_TIME = 24;
 const results = [];
 
 for (let blueprintIndex = 0; blueprintIndex < blueprints.length; blueprintIndex++) {
-    console.log('Blueprint', blueprintIndex + 1, blueprints[blueprintIndex]);
+    console.log('Blueprint', blueprintIndex + 1);
 
     const geodes = dfs(blueprintIndex, START_ROBOTS, START_RESOURCES, START_TIME);
-    const quality = geodes * (blueprintIndex + 1);
+    cache.reset();
 
-    maxMax = 0;
-    cacheReset();
-
-    console.log('Result', blueprintIndex + 1, geodes, quality);
-    results.push([blueprintIndex, geodes, quality]);
+    console.log('Max geodes', geodes, '\n');
+    results.push(geodes);
 }
 
-console.log(results.reduce((acc, r) => ((acc += r[2]), acc), 0));
+console.log(
+    'Part one',
+    'Quality:',
+    results.reduce((acc, g, i) => ((acc += (i + 1) * g), acc), 0)
+); // 1349
+// console.log(results.reduce((acc, g) => ((acc *= g), acc), 1));
 
 console.log('End');
