@@ -7,7 +7,7 @@ console.log('Day 19');
 
 const blueprints = [];
 
-for (let line of fromFile('./day19/example.txt')) {
+for (let line of fromFile('./day19/input.txt')) {
     if (!line.length) {
         continue;
     }
@@ -20,18 +20,27 @@ for (let line of fromFile('./day19/example.txt')) {
     const cObsidianMatch = lObsidian.match(/^.+ (?<ore>\d+) ore and (?<clay>\d+) clay$/);
     const cGeodeMatch = lGeode.match(/^.+ (?<ore>\d+) ore and (?<obsidian>\d+) obsidian$/);
 
-    blueprints.push({
+    const price = {
         ore: { ore: +cOreMatch.groups.ore },
         clay: { ore: +cClayMatch.groups.ore },
         obsidian: { ore: +cObsidianMatch.groups.ore, clay: +cObsidianMatch.groups.clay },
         geode: { ore: +cGeodeMatch.groups.ore, obsidian: +cGeodeMatch.groups.obsidian },
-    });
+    };
+
+    const maxSpend = {
+        ore: Math.max(price.ore.ore, price.clay.ore, price.obsidian.ore, price.geode.ore),
+        clay: Math.max(price.obsidian.clay),
+        obsidian: Math.max(price.geode.obsidian),
+        geode: Number.MAX_SAFE_INTEGER,
+    };
+
+    blueprints.push({ price, maxSpend });
 }
 
 // console.log(blueprints);
 
 // rotating cache as single map has about 16M limit size
-const caches = [new Map()];
+let caches = [new Map()];
 
 const cacheSet = (key, value) => {
     let cache = caches[caches.length - 1];
@@ -45,10 +54,13 @@ const cacheGet = key => {
     for (let cache of caches) if (cache.has(key)) return cache.get(key);
     return undefined;
 };
-// const cacheHas = key => {
-//     for (let cache of caches) if (cache.has(key)) return true;
-//     return false;
-// };
+const cacheHas = key => {
+    for (let cache of caches) if (cache.has(key)) return true;
+    return false;
+};
+const cacheReset = () => {
+    caches = [new Map()];
+};
 
 let maxMax = 0;
 
@@ -66,7 +78,7 @@ function dfs(blueprintIndex, robots, resources, time) {
     const cached = cacheGet(key);
     if (cached) return cached;
 
-    const blueprint = blueprints[blueprintIndex];
+    const { price, maxSpend } = blueprints[blueprintIndex];
 
     // console.log(blueprint, robots, resources, time);
 
@@ -93,7 +105,11 @@ function dfs(blueprintIndex, robots, resources, time) {
     };
 
     // build geode robot
-    if (resources.ore >= blueprint.geode.ore && resources.obsidian >= blueprint.geode.obsidian) {
+    if (
+        robots.geode < maxSpend.geode &&
+        resources.ore >= price.geode.ore &&
+        resources.obsidian >= price.geode.obsidian
+    ) {
         max = Math.max(
             max,
             dfs(
@@ -104,8 +120,8 @@ function dfs(blueprintIndex, robots, resources, time) {
                 },
                 {
                     ...newResources,
-                    ore: newResources.ore - blueprint.geode.ore,
-                    obsidian: newResources.obsidian - blueprint.geode.obsidian,
+                    ore: newResources.ore - price.geode.ore,
+                    obsidian: newResources.obsidian - price.geode.obsidian,
                 },
                 newTime
             )
@@ -113,7 +129,11 @@ function dfs(blueprintIndex, robots, resources, time) {
     }
 
     // build obsidian robot
-    if (resources.ore >= blueprint.obsidian.ore && resources.clay >= blueprint.obsidian.clay) {
+    if (
+        robots.obsidian < maxSpend.obsidian &&
+        resources.ore >= price.obsidian.ore &&
+        resources.clay >= price.obsidian.clay
+    ) {
         max = Math.max(
             max,
             dfs(
@@ -124,8 +144,8 @@ function dfs(blueprintIndex, robots, resources, time) {
                 },
                 {
                     ...newResources,
-                    ore: newResources.ore - blueprint.obsidian.ore,
-                    clay: newResources.clay - blueprint.obsidian.clay,
+                    ore: newResources.ore - price.obsidian.ore,
+                    clay: newResources.clay - price.obsidian.clay,
                 },
                 newTime
             )
@@ -133,7 +153,7 @@ function dfs(blueprintIndex, robots, resources, time) {
     }
 
     // build clay robot
-    if (resources.ore >= blueprint.clay.ore) {
+    if (robots.clay < maxSpend.clay && resources.ore >= price.clay.ore) {
         max = Math.max(
             max,
             dfs(
@@ -144,7 +164,7 @@ function dfs(blueprintIndex, robots, resources, time) {
                 },
                 {
                     ...newResources,
-                    ore: newResources.ore - blueprint.clay.ore,
+                    ore: newResources.ore - price.clay.ore,
                 },
                 newTime
             )
@@ -152,7 +172,7 @@ function dfs(blueprintIndex, robots, resources, time) {
     }
 
     // build ore robot
-    if (resources.ore >= blueprint.ore.ore) {
+    if (robots.ore < maxSpend.ore && resources.ore >= price.ore.ore) {
         max = Math.max(
             max,
             dfs(
@@ -163,7 +183,7 @@ function dfs(blueprintIndex, robots, resources, time) {
                 },
                 {
                     ...newResources,
-                    ore: newResources.ore - blueprint.ore.ore,
+                    ore: newResources.ore - price.ore.ore,
                 },
                 newTime
             )
@@ -183,15 +203,19 @@ const START_TIME = 24;
 
 const results = [];
 
-// for (let blueprintIndex = 0; blueprintIndex < blueprints.length; blueprintIndex++) {
-let blueprintIndex = 0;
+for (let blueprintIndex = 0; blueprintIndex < blueprints.length; blueprintIndex++) {
+    console.log('Blueprint', blueprintIndex + 1, blueprints[blueprintIndex]);
 
-const geodes = dfs(blueprintIndex, START_ROBOTS, START_RESOURCES, START_TIME);
-const quality = geodes * (blueprintIndex + 1);
+    const geodes = dfs(blueprintIndex, START_ROBOTS, START_RESOURCES, START_TIME);
+    const quality = geodes * (blueprintIndex + 1);
 
-results.push([blueprintIndex, geodes, quality]);
-// }
+    maxMax = 0;
+    cacheReset();
 
-console.log(results);
+    console.log('Result', blueprintIndex + 1, geodes, quality);
+    results.push([blueprintIndex, geodes, quality]);
+}
+
+console.log(results.reduce((acc, r) => ((acc += r[2]), acc), 0));
 
 console.log('End');
