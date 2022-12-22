@@ -15,12 +15,11 @@ for (let line of fromFile('./day22/input.txt')) {
         continue;
     }
 
+    // commands line
     if (mapEnd) {
-        // commands line
-
-        const match = line.matchAll(/(\d+)(R|L)/g);
+        const match = line.matchAll(/(\d+)(R|L)?/g);
         for (const [_, steps, rotation] of match) {
-            commands.push([+steps, rotation === 'R' ? 1 : -1]);
+            commands.push([+steps, rotation === 'R' ? 1 : rotation === 'L' ? -1 : 0]);
         }
 
         continue;
@@ -117,6 +116,6 @@ for (const [steps, rotation] of commands) {
 draw();
 
 const password = 1e3 * (posY + 1) + 4 * (posX + 1) + direction;
-console.log(password); // 51258 ???
+console.log(password); // 51254 ???
 
 console.log('End');
