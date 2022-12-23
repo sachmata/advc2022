@@ -59,6 +59,9 @@ function draw() {
     console.log();
 }
 
+// part two
+let elfNotMoved = false;
+
 class Elf {
     x;
     y;
@@ -122,6 +125,9 @@ class Elf {
 
             elves.set(this.key(), this);
 
+            // part two
+            elfNotMoved = false;
+
             // console.log(_key, 'moves', this.proposal, 'to', this.key());
         }
 
@@ -149,8 +155,12 @@ for (let line of fromFile('./day23/input.txt')) {
 
 // draw();
 
-for (let round = 0; round < 10; round++) {
+// 10, part one
+for (let round = 0; round < 1e6; round++) {
     // console.log('Round', round + 1);
+
+    // part two
+    elfNotMoved = true;
 
     proposals.clear();
 
@@ -163,6 +173,12 @@ for (let round = 0; round < 10; round++) {
     }
 
     lookOrder.push(lookOrder.shift());
+
+    // part two
+    if (elfNotMoved) {
+        console.log('Elf not moved round', round + 1); // 1055
+        break;
+    }
 
     // draw();
 }
@@ -188,6 +204,6 @@ for (let elf of elves.values()) {
 }
 
 const patch = (maxX - minX + 1) * (maxY - minY + 1);
-console.log(patch - elves.size); //6724
+console.log(patch - elves.size); // 4109
 
 console.log('End');
