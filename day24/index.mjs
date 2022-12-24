@@ -106,7 +106,7 @@ const MAX_TIME = 300;
 
 const cache = new Cache();
 
-const dfs = (x, y, time) => {
+const dfs = (x, y, time, start, end) => {
     if (time > MAX_TIME) {
         return MAX_TIME;
     }
@@ -127,11 +127,22 @@ const dfs = (x, y, time) => {
         ...[...OFFSETS, [0, 0]].map(([oX, oY]) => {
             const _x = x + oX;
             const _y = y + oY;
+
+            if (_x === minX && minY - 1 === 0) {
+                // wait on start;
+                return dfs(_x, _y, _time);
+            }
+
+            // if (_x === maxX && y === maxY + 1) {
+            //     // wait on start;
+            //     return dfs(_x, _y, _time);
+            // }
+
             if (_x < minX || _x > maxX || _y < minY || _y > maxY || _data.has(key(_x, _y))) {
                 return MAX_TIME;
             }
 
-            console.log('move', _x, _y, _time);
+            // console.log('move', _x, _y, _time);
             return dfs(_x, _y, _time);
         })
     );
