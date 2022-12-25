@@ -102,21 +102,20 @@ const blizzardsState = time => {
 
 // console.log(blizzards, maxX, maxY);
 
-const MAX_TIME = 300;
+const MAX_TIME = 900;
 
 const cache = new Cache();
 
-const dfs = (x, y, time, start, end) => {
+const dfs = (x, y, time, ex, ey) => {
     if (time > MAX_TIME) {
         return MAX_TIME;
     }
 
-    if (x === maxX && y === maxY) {
-        // console.log('end', x, y, time + 1);
-        return time + 1;
+    if (x === ex && y === ey) {
+        return time;
     }
 
-    const cacheKey = cyrb53([x, y, time].join('|'));
+    const cacheKey = cyrb53([x, y, time, ex, ey].join('|'));
     const cached = cache.get(cacheKey);
     if (cached) return cached;
 
@@ -128,22 +127,16 @@ const dfs = (x, y, time, start, end) => {
             const _x = x + oX;
             const _y = y + oY;
 
-            if (_x === minX && minY - 1 === 0) {
-                // wait on start;
-                return dfs(_x, _y, _time);
+            if (
+                ((_x === minX && _y === minY - 1) ||
+                    (_x === maxX && _y === maxY + 1) ||
+                    (_x >= minX && _x <= maxX && _y >= minY && _y <= maxY)) &&
+                !_data.has(key(_x, _y))
+            ) {
+                // console.log('move', _x, _y, _time);
+                return dfs(_x, _y, _time, ex, ey);
             }
-
-            // if (_x === maxX && y === maxY + 1) {
-            //     // wait on start;
-            //     return dfs(_x, _y, _time);
-            // }
-
-            if (_x < minX || _x > maxX || _y < minY || _y > maxY || _data.has(key(_x, _y))) {
-                return MAX_TIME;
-            }
-
-            // console.log('move', _x, _y, _time);
-            return dfs(_x, _y, _time);
+            return MAX_TIME;
         })
     );
 
@@ -151,8 +144,14 @@ const dfs = (x, y, time, start, end) => {
     return min;
 };
 
-const minutes = dfs(minX, minY - 1, 0);
-console.log(minutes !== MAX_TIME ? minutes : 'Not found');
+const minutes1 = dfs(minX, minY - 1, 0, maxX, maxY + 1);
+console.log(minutes1 !== MAX_TIME ? minutes1 : 'Not found'); // 232
+
+const minutes2 = dfs(maxX, maxY + 1, minutes1, minX, minY - 1);
+console.log(minutes2 !== MAX_TIME ? minutes2 : 'Not found'); // 487
+
+const minutes3 = dfs(minX, minY - 1, minutes2, maxX, maxY + 1);
+console.log(minutes3 !== MAX_TIME ? minutes3 : 'Not found'); // 715
 
 // for (let s = 0; s < 18; s++) {
 //     console.log(s);
